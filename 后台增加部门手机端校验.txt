@@ -1,0 +1,52 @@
+*** Settings ***
+Library           Selenium2Library
+Library           Collections
+Library           AppiumLibrary
+
+*** Test Cases ***
+Test1
+    :FOR    ${i}    IN RANGE    100
+    \    ${Number}    Evaluate    random.randint(1,1000)    random
+    \    ${OrgName}    SetVariable    鼓浪屿${Number}
+    \    ${Alive}=    Run Keyword And Return Status    should contain    ${OrgName}    10s
+    \    Open Browser    http://10.86.199.20:81/uc/user    chrome
+    \    Sleep    5s
+    \    Selenium2Library.Input Text    css=[type=text]    admin
+    \    Selenium2Library.Input Text    css=[type=password]    Yealink1105
+    \    Selenium2Library.Click Button    登录
+    \    Sleep    5s
+    \    Selenium2Library.Click Element    xpath=//ul[2]/li/div/i
+    \    Sleep    5s
+    \    遍历查找    ${OrgName}    ${Alive}
+
+*** Keywords ***
+遍历查找
+    [Arguments]    ${OrgName}    ${Alive}
+    :FOR    ${i}    IN RANGE    100
+    \    Run Keyword If    ${Alive}==True    ${OrgName}    SetVariable    鼓浪屿${Number+1}
+    \    ...    ELSE    Exit For Loop
+    \    Exit For Loop If    ${Alive}==False
+    Selenium2Library.Click Element    css=div.btn-right > button.el-button.el-button--primary
+    Selenium2Library.Input Text    css=form.el-form.dialog-body > div.el-form-item.is-required > div.el-form-item__content > div.el-input > input.el-input__inner    ${OrgName}
+    Selenium2Library.Click Button    确定
+    Close Browser
+    Open Application    http://localhost:4723/wd/hub    platformName=Android    platformVersion=7.1.1    deviceName=6423b456    app=E:/UCMobile/Yealink_UC_Android_1.0.254.672-pre-debug.apk    appPackage=com.yealink.uc.android.alpha
+    ...    unicodeKeyboard=True    resetKeyboard=True
+    AppiumLibrary.Wait Until Page Contains Element    com.yealink.uc.android.alpha:id/tab_icon    10s
+    AppiumLibrary.Click Element    //android.widget.FrameLayout[1]/android.widget.LinearLayout[1]/android.widget.FrameLayout[1]/android.widget.LinearLayout[1]/android.widget.FrameLayout[1]/android.widget.LinearLayout[1]/android.widget.LinearLayout[1]/android.widget.RelativeLayout[2]/android.widget.RelativeLayout[1]/android.widget.LinearLayout[1]/android.widget.LinearLayout[1]/android.widget.LinearLayout[1]/android.widget.RelativeLayout[2]/android.widget.TextView[1]
+    AppiumLibrary.Wait Until Page Contains    联系人    10s
+    AppiumLibrary.Click Element    com.yealink.uc.android.alpha:id/contact_grouop_indictor
+    Sleep    5s
+    &{loc_start}    Get Element Location    com.yealink.uc.android.alpha:id/my_computer_name
+    &{loc_size}    AppiumLibrary.Get Element Size    com.yealink.uc.android.alpha:id/my_computer_name
+    ${loc_stop_y}    Evaluate    float(&{loc_start}[y])
+    :FOR    ${i}    IN RANGE    100
+    \    ${last}    Run Keyword And Return Status    AppiumLibrary.Page Should Contain Element    xpath=//android.widget.TextView[@text="奥巴马(Obama)"]
+    \    Run Keyword If    ${last}==True    Run Keywords    log    没有找到
+    \    ...    AND    Exit For Loop
+    \    ${loc_stop_y}    Evaluate    float(${loc_stop_y}+&{loc_size}[height])
+    \    ${status}    Run Keyword And Return Status    AppiumLibrary.Page Should Contain Element    xpath=//android.widget.TextView[@text="${OrgName}"]
+    \    Run Keyword If    ${status}==True    Run Keywords    log    找到新增部门
+    \    ...    AND    Exit For Loop
+    \    ...    ELSE    Swipe    &{loc_start}[x]    ${loc_stop_y}    &{loc_start}[x]
+    \    ...    &{loc_start}[y]
